@@ -15,7 +15,9 @@ def api():
 
     if airport_name is not None:
         if len(airport_name) > 3:
-            return jsonify({})
+            result = jsonify({})
+            result.headers.add('Content-Type', 'application/json')
+            return result
 
         info = requests.get(f"https://www.airport-data.com/api/ap_info.json?iata={airport_name}")
 
@@ -32,14 +34,20 @@ def api():
         return result
 
     elif stock_name is not None:
-        stock = yf.Ticker(stock_name)
-        price = stock.info["currentPrice"]
+        try:
+            stock = yf.Ticker(stock_name)
+            price = stock.info["currentPrice"]
+        except:
+            price = {}
         result = jsonify(price)
         result.headers.add('Content-Type', 'application/json')
         return result
 
     elif query is not None:
-        result = jsonify(eval(query))
+        try:
+            result = jsonify(eval(query))
+        except:
+            result = jsonify({})
         result.headers.add('Content-Type', 'application/json')
         return result
     else:
