@@ -2,30 +2,32 @@ from flask import Flask, request, jsonify
 import yfinance as yf
 import requests
 
-weather_api_key = "a879e9b7995c46ec8ba221900242704"
+WEATHER_TOKEN = "a879e9b7995c46ec8ba221900242704"
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def api():
-    airport = request.args.get('queryAirportTemp')
-    stock_name = request.args.get("queryStockPrice")
-    values = request.args.get('queryEval')
+    airport_name = request.args.get('queryAirportTemp', None)
+    stock_name = request.args.get("queryStockPrice", None)
+    query = request.args.get('queryEval', None)
 
-    if airport is not None:
-        if len(airport) > 3:
+    if airport_name is not None:
+        if len(airport_name) > 3:
             return jsonify({})
 
-        info = requests.get(f"https://www.airport-data.com/api/ap_info.json?iata={airport}")
+        info = requests.get(f"https://www.airport-data.com/api/ap_info.json?iata={airport_name}")
 
-        data = info.json()
-        longitude = data["longitude"]
-        latitude = data["latitude"]
+        try:
+            data = info.json()
+            longitude = data["longitude"]
+            latitude = data["latitude"]
 
-        temperature = requests.get(f"http://api.weatherapi.com/v1/current.json?q={latitude},{longitude}&key={weather_api_key}")
-        temp_data = temperature.json()
-        result = jsonify(temp_data['current']['temp_c'])
+            temperature = requests.get(f"http://api.weatherapi.com/v1/current.json?q={latitude},{longitude}&key={WEATHER_TOKEN}")
+            result = jsonify(temperature.json()['current']['temp_c'])
+        except:
+            result = jsonify({})
         result.headers.add('Content-Type', 'application/json')
         return result
 
@@ -36,9 +38,8 @@ def api():
         result.headers.add('Content-Type', 'application/json')
         return result
 
-    elif values is not None:
-        result = eval(values)
-        result = jsonify(result)
+    elif query is not None:
+        result = jsonify(eval(query))
         result.headers.add('Content-Type', 'application/json')
         return result
     else:
